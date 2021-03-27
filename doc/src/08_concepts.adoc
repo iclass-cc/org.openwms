@@ -120,7 +120,7 @@ chosen in case of an error.
 ==== Error Handling with Asynchronous AMQP Messaging
 Spring AMQP with RabbitMQ is used for the asynchronous messaging infrastructure. A publisher sends a message to an AMQP Exchange where a
 consumer process has connected a AMQP Queue to. A message is sent to the Exchange and published to one or more connected Queues. If a
-consumer fails to process the queued message it has several possibilities to react: Re-Queue, Throw-Away or Forward.
+consumer fails to process the queued message there are several possibilities how to react: Re-Queue, Throw-Away or Forward.
 
 **Re-Queuing failed Messages**
 In case of re-queueing the message is left in the queue and executed again. How often this happens and with what interval can be configured.
@@ -153,7 +153,7 @@ So when to use what kind of strategy and what configuration to apply is often a 
 ===== Strategies to re-queue Messages
 By default, Spring AMQP does not acknowledge a message to RabbitMQ that has failed to process. That means a listener is called over and over
 again. This behaviour can simply be stopped by throwing an `org.springframework.amqp.AmqpRejectAndDontRequeueException` within the
-application listener code.
+application listener code like it is shown in <<throw-away>>.
 
 But with Spring AMQP the handling is also configurable: How often a message is re-queued and the repeat interval with many other options.
 ...
@@ -175,8 +175,32 @@ A typical Spring AMQP RabbitTemplate configuration of a service looks like:
     }
 ```
 
+**Use Cases**
 This is often done in use cases where the consumer expects the message is going to be repeated by the sender after a period of time.
 
+[[throw-away]]
 ===== Strategies to Throw-Away Messages
+
+**Use Cases**
+For sure we can throw away messages, silently acknowledge them, where we know the publisher expects no answer and repeats the message in
+case no answer is returned. So we depend on the frequency of the publisher how often the message is repeated. For example, the publisher may
+be a https://en.wikipedia.org/wiki/Programmable_logic_controller[PLC] that is configured to resend the initial message request every 150
+milliseconds. In this case, this could have an impact on the overall performance. Whereas an PLC may also be configured to repeat the
+message only after e.g. 30 seconds what has not that much impact on performance.
+
+**Configuration**
+A typical message listener consuming the message and throws it away on any exceptions looks like this:
+```
+    @RabbitListener(queues = "${owms.commands.common.tu.queue-name}")
+    public void onCommand(@Payload TUCommand command) {
+        try {
+            handler.handle(command);
+        } catch (Exception ex) {
+            throw new AmqpRejectAndDontRequeueException(ex.getMessage(), ex);
+        }
+    }
+```
+The listener delegates to a message handler that is responsible to execute the business logic. In case of any errors the listener throws
+an `AmqpRejectAndDontRequeueException` to signal the Spring AMQP runtime to reject the message. So it is not processed anymore.
 
 ===== Strategies to Forward Messages

@@ -12,24 +12,6 @@
     <name>OpenWMS.org CORE: Utilities Library</name>
     <description>A project that contains utility classes, exception types, common event types that are used by all other projects.</description>
 
-    <build>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <artifactId>maven-compiler-plugin</artifactId>
-                    <version>${maven-compiler-plugin.version}</version>
-                    <configuration>
-                        <debug>${debug.info}</debug>
-                        <optimize>true</optimize>
-                        <fork>true</fork>
-                        <encoding>${project.build.sourceEncoding}</encoding>
-                        <release>8</release>
-                    </configuration>
-                </plugin>
-            </plugins>
-        </pluginManagement>
-    </build>
-
     <dependencies>
         <!-- Spring Framework -->
         <dependency>
@@ -75,8 +57,8 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>net.sf.dozer</groupId>
-            <artifactId>dozer</artifactId>
+            <groupId>com.github.dozermapper</groupId>
+            <artifactId>dozer-core</artifactId>
             <scope>provided</scope>
             <optional>true</optional>
         </dependency>
